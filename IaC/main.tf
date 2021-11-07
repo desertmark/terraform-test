@@ -28,3 +28,30 @@ resource "azurerm_resource_group" "rg" {
   tags     = local.tags
 }
 
+module "app_todoui" {
+  source              = "./modules/app-service"
+  name_template       = local.name_template
+  location            = var.location
+  resource_group_name = azurerm_resource_group.rg.name
+  app_name            = "todoui"
+  image_name          = "desertmark/todoui:latest"
+  registry_server_url = "https://index.docker.io/"
+  tags                = local.tags
+}
+
+resource "azurerm_app_service_custom_hostname_binding" "todoui_hostname" {
+  hostname            = "${var.env}-todo.${var.domain}"
+  app_service_name    = module.app_todoui.name
+  resource_group_name = azurerm_resource_group.rg.name
+}
+
+module "app_todoservice" {
+  source              = "./modules/app-service"
+  name_template       = local.name_template
+  location            = var.location
+  resource_group_name = azurerm_resource_group.rg.name
+  app_name            = "todoservice"
+  image_name          = "desertmark/todoservice:latest"
+  registry_server_url = "https://index.docker.io/"
+  tags                = local.tags
+}

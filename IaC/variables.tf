@@ -6,3 +6,7 @@ variable "location" {
 variable "env" {
   description = "environment, dev|stage|prod"
 }
+
+variable "domain" {
+  description = "Domain to use i.e: mydomain.com"
+}

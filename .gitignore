@@ -29,4 +29,9 @@ override.tf.json
 # example: *tfplan*
 
 #variables
-*.tfvars
+terraform.tfvars
+
+
+## APPS
+todoui/node_modules
+todoservice/node_modules

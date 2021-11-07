@@ -1,0 +1,20 @@
+{
+  "name": "todoservice",
+  "version": "0.0.1",
+  "description": "Todo backend service",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js",
+    "serve": "node index.js",
+    "docker:build": "docker build -t desertmark/todoservice --progress=plain ."
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.14"
+  }
+}
