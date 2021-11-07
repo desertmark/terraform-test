@@ -5,8 +5,8 @@ ENV API_URL=$BUILD_API_URL
 
 WORKDIR /usr/src/app
 
-# COPY package.json ./
-# RUN npm i 
+COPY package.json ./
+RUN npm i 
 
 COPY . ./
 
@@ -14,7 +14,7 @@ COPY . ./
 RUN node nginx.conf.js
 RUN cat ./nginx.conf
 
-# RUN npm run build --prod
+RUN npm run build --prod
 
 # Stage 2
 FROM nginx:alpine
