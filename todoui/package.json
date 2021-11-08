@@ -5,9 +5,9 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build --configuration=dev",
-    "docker:build": "docker build -t desertmark/todoui --progress=plain --no-cache -f .",
+    "docker:build": "docker build -t desertmark/todoui --progress=plain --no-cache .",
     "docker:build:nginx": "docker build -t desertmark/todoui --build-arg BUILD_API_URL=https://app-todoservice-dev-westeurope-001.azurewebsites.net --progress=plain --no-cache -f ./nginx.Dockerfile .",
-    "serve:dist": "serve ./dist/todoui",
+    "serve:dist": "serve -p 80 ./dist/todoui",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
