@@ -30,6 +30,7 @@ override.tf.json
 
 #variables
 terraform.tfvars
+backend.tfvars
 
 
 ## APPS
