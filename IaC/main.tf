@@ -30,6 +30,15 @@ resource "azurerm_resource_group" "rg" {
   tags     = local.tags
 }
 
+module "vnet" {
+  source              = "./modules/vnet"
+  name_template       = local.name_template
+  location            = var.location
+  resource_group_name = azurerm_resource_group.rg.name
+  solution            = var.solution
+  tags                = local.tags
+}
+
 module "app_ui" {
   source              = "./modules/app-service"
   name_template       = local.name_template
@@ -39,14 +48,11 @@ module "app_ui" {
   image_name          = var.ui_image_name
   registry_server_url = "https://index.docker.io/"
   tags                = local.tags
+  agw_subnet_id       = module.vnet.agw_subnet_id
+  depends_on = [
+    module.vnet
+  ]
 }
-
-# We don't need this anymore because we have the gateway now as an entrypoint 
-# resource "azurerm_app_service_custom_hostname_binding" "ui_hostname" {
-#   hostname            = "${var.env}-${var.solution}.${var.domain}"
-#   app_service_name    = module.app_ui.name
-#   resource_group_name = azurerm_resource_group.rg.name
-# }
 
 module "app_service" {
   source              = "./modules/app-service"
@@ -57,16 +63,13 @@ module "app_service" {
   image_name          = var.service_image_name
   registry_server_url = "https://index.docker.io/"
   tags                = local.tags
+  agw_subnet_id       = module.vnet.agw_subnet_id
+  depends_on = [
+    module.vnet
+  ]
 }
 
-module "vnet" {
-  source              = "./modules/vnet"
-  name_template       = local.name_template
-  location            = var.location
-  resource_group_name = azurerm_resource_group.rg.name
-  solution            = var.solution
-  tags                = local.tags
-}
+
 
 module "agw" {
   source              = "./modules/app-gateway"

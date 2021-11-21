@@ -23,6 +23,18 @@ resource "azurerm_app_service" "app" {
     linux_fx_version          = "DOCKER|${var.image_name}"
     always_on                 = false
     use_32_bit_worker_process = true
+
+    # Lock down from internet to only be access throw the Application Gateway
+    ip_restriction = [{
+      action                    = "Allow"
+      headers                   = []
+      # ip_address                = "0.0.0.0/0"
+      ip_address                = null
+      name                      = "VirtualNetwork"
+      priority                  = 300
+      service_tag               = null
+      virtual_network_subnet_id = var.agw_subnet_id
+    }]
   }
 
   app_settings = {

@@ -101,24 +101,6 @@ resource "azurerm_application_gateway" "agw" {
     }
 
   }
-  # only supported in V2
-  # rewrite_rule_set {
-  #   name = "remove-api"
-  #   rewrite_rule {
-  #     name = "${var.solution}service-rw-rule"
-  #     # if url path has /api
-  #     condition {
-  #       variable    = "uri_path"
-  #       ignore_case = true
-  #       pattern     = ".*api/(.*)"
-  #     }
-  #     # Rewrite to replace /api with ""
-  #     url {
-  #       path = "/{var_uri_path_1}"
-  #     }
-  #     rule_sequence = 1
-  #   }
-  # }
 }
 
 
