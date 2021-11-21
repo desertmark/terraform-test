@@ -41,11 +41,12 @@ module "app_ui" {
   tags                = local.tags
 }
 
-resource "azurerm_app_service_custom_hostname_binding" "ui_hostname" {
-  hostname            = "${var.env}-${var.solution}.${var.domain}"
-  app_service_name    = module.app_ui.name
-  resource_group_name = azurerm_resource_group.rg.name
-}
+# We don't need this anymore because we have the gateway now as an entrypoint 
+# resource "azurerm_app_service_custom_hostname_binding" "ui_hostname" {
+#   hostname            = "${var.env}-${var.solution}.${var.domain}"
+#   app_service_name    = module.app_ui.name
+#   resource_group_name = azurerm_resource_group.rg.name
+# }
 
 module "app_service" {
   source              = "./modules/app-service"
@@ -71,8 +72,17 @@ module "agw" {
   source              = "./modules/app-gateway"
   name_template       = local.name_template
   location            = var.location
+  env                 = var.env
+  zone_name           = var.domain
+  zone_name_rg        = "Default"
   resource_group_name = azurerm_resource_group.rg.name
   solution            = var.solution
   subnet_id           = module.vnet.agw_subnet_id
   tags                = local.tags
+  ui_hostname         = module.app_ui.hostname
+  service_hostname    = module.app_service.hostname
+  depends_on = [
+    module.app_service,
+    module.app_ui
+  ]
 }

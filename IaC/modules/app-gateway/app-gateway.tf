@@ -1,11 +1,12 @@
 locals {
   frontend_port_name             = "agw-fe-http"
   frontend_ip_configuration_name = "agw-fe-ip-settings"
-  listener_name                  = "${var.solution}-listener"
+  listener_name                  = "${var.solution}-http-listener"
   request_routing_rule_name      = "${var.solution}-rule"
   frontend_pool_name             = "${var.solution}ui-fe-pool"
   backend_pool_name              = "${var.solution}service-be-pool"
-  backend_http_settings_name     = "${var.solution}-http-settings"
+  ui_http_settings_name          = "${var.solution}-ui-http-settings"
+  service_http_settings_name     = "${var.solution}-service-http-settings"
   url_path_map_name              = "${var.solution}-url-paths"
 }
 
@@ -14,9 +15,10 @@ resource "azurerm_application_gateway" "agw" {
   resource_group_name = var.resource_group_name
   location            = var.location
   tags                = var.tags
+  zones               = ["1"]
   sku {
-    name     = "Standard_Small"
-    tier     = "Standard"
+    name     = "Standard_v2"
+    tier     = "Standard_v2"
     capacity = 1
   }
 
@@ -36,18 +38,31 @@ resource "azurerm_application_gateway" "agw" {
   }
 
   backend_address_pool {
-    name = local.frontend_pool_name
+    name  = local.frontend_pool_name
+    fqdns = [var.ui_hostname]
   }
   backend_address_pool {
-    name = local.backend_pool_name
+    name  = local.backend_pool_name
+    fqdns = [var.service_hostname]
   }
 
   backend_http_settings {
-    name                  = local.backend_http_settings_name
-    cookie_based_affinity = "Disabled"
-    port                  = 80
-    protocol              = "Http"
-    request_timeout       = 60
+    name                                = local.ui_http_settings_name
+    cookie_based_affinity               = "Disabled"
+    port                                = 80
+    protocol                            = "Http"
+    request_timeout                     = 20
+    pick_host_name_from_backend_address = true
+  }
+
+  backend_http_settings {
+    name                                = local.service_http_settings_name
+    cookie_based_affinity               = "Disabled"
+    port                                = 80
+    protocol                            = "Http"
+    request_timeout                     = 20
+    pick_host_name_from_backend_address = true
+    path                                = "/"
   }
 
   http_listener {
@@ -58,57 +73,71 @@ resource "azurerm_application_gateway" "agw" {
   }
 
   request_routing_rule {
-    name                       = local.request_routing_rule_name
-    rule_type                  = "Basic"
-    http_listener_name         = local.listener_name
-    backend_address_pool_name  = local.frontend_pool_name
-    backend_http_settings_name = local.backend_http_settings_name
-    url_path_map_name          = local.url_path_map_name
+    name               = local.request_routing_rule_name
+    rule_type          = "PathBasedRouting"
+    http_listener_name = local.listener_name
+    # backend_address_pool_name  = local.frontend_pool_name
+    # backend_http_settings_name = local.backend_http_settings_name
+    url_path_map_name = local.url_path_map_name
   }
 
   url_path_map {
-    name = local.url_path_map_name
+    name                               = local.url_path_map_name
+    default_backend_http_settings_name = local.ui_http_settings_name
+    default_backend_address_pool_name  = local.frontend_pool_name
 
     path_rule {
-      paths                      = ["/*"]
-      backend_http_settings_name = local.backend_http_settings_name
       name                       = "${var.solution}-root"
+      paths                      = ["/*"]
+      backend_http_settings_name = local.ui_http_settings_name
       backend_address_pool_name  = local.frontend_pool_name
     }
 
     path_rule {
       paths                      = ["/api/*"]
-      backend_http_settings_name = local.backend_http_settings_name
+      backend_http_settings_name = local.service_http_settings_name
       name                       = "${var.solution}-api"
       backend_address_pool_name  = local.backend_pool_name
     }
 
   }
-
-  rewrite_rule_set {
-    name = "remove-api"
-    rewrite_rule {
-      name = "${var.solution}service-rw-rule"
-      # if url path has /api
-      condition {
-        variable    = "uri_path"
-        ignore_case = true
-        pattern     = ".*api/(.*)"
-      }
-      # Rewrite to replace /api with ""
-      url {
-        path = "/{var_uri_path_1}"
-      }
-      rule_sequence = 1
-    }
-  }
+  # only supported in V2
+  # rewrite_rule_set {
+  #   name = "remove-api"
+  #   rewrite_rule {
+  #     name = "${var.solution}service-rw-rule"
+  #     # if url path has /api
+  #     condition {
+  #       variable    = "uri_path"
+  #       ignore_case = true
+  #       pattern     = ".*api/(.*)"
+  #     }
+  #     # Rewrite to replace /api with ""
+  #     url {
+  #       path = "/{var_uri_path_1}"
+  #     }
+  #     rule_sequence = 1
+  #   }
+  # }
 }
 
 
 resource "azurerm_public_ip" "agw_ipp" {
-  name                = format(var.name_template, "ipp-${var.solution}")
+  name                = format(var.name_template, "ipp")
   resource_group_name = var.resource_group_name
   location            = var.location
-  allocation_method   = "Dynamic"
+  allocation_method   = "Static"
+  tags                = var.tags
+  sku                 = "Standard" #GWv2 requires Standard but v1 can use "Basic"
+}
+
+
+# Add Gateway IP to Public DNS Zone
+resource "azurerm_dns_a_record" "agw_dns_record" {
+  name                = "${var.env}-${var.solution}"
+  zone_name           = var.zone_name
+  resource_group_name = var.zone_name_rg
+  ttl                 = 300
+  target_resource_id  = azurerm_public_ip.agw_ipp.id
   tags                = var.tags
 }
