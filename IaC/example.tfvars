@@ -1,2 +1,5 @@
 env    = "dev"
 domain = "mydomain.com"
+solution           = "todo"
+service_image_name = "desertmark/todoservice:latest"
+ui_image_name      = "desertmark/todoui:latest"
