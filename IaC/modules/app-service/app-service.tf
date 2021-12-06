@@ -19,8 +19,11 @@ resource "azurerm_app_service" "app" {
   tags                = var.tags
 
   logs {
-    application_logs {
-      file_system_level = "Verbose"
+    http_logs {
+      file_system {
+        retention_in_days = 1
+        retention_in_mb = 25
+      }
     }
   }
 
