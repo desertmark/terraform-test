@@ -49,6 +49,8 @@ module "app_ui" {
   registry_server_url = "https://index.docker.io/"
   tags                = local.tags
   agw_subnet_id       = module.vnet.agw_subnet_id
+  tier                = "Basic"
+  size                = "B1"
   depends_on = [
     module.vnet
   ]
@@ -64,6 +66,9 @@ module "app_service" {
   registry_server_url = "https://index.docker.io/"
   tags                = local.tags
   agw_subnet_id       = module.vnet.agw_subnet_id
+  tier                = "Standard"
+  size                = "S1"
+  subnet_id           = module.vnet.app_subnet_id
   depends_on = [
     module.vnet
   ]

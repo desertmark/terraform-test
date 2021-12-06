@@ -6,8 +6,8 @@ resource "azurerm_app_service_plan" "plan" {
   reserved            = true
   tags                = var.tags
   sku {
-    tier = "Free"
-    size = "B1"
+    tier = var.tier
+    size = var.size
   }
 }
 
@@ -18,6 +18,12 @@ resource "azurerm_app_service" "app" {
   app_service_plan_id = azurerm_app_service_plan.plan.id
   tags                = var.tags
 
+  logs {
+    application_logs {
+      file_system_level = "Verbose"
+    }
+  }
+
   site_config {
     app_command_line          = ""
     linux_fx_version          = "DOCKER|${var.image_name}"
@@ -26,8 +32,8 @@ resource "azurerm_app_service" "app" {
 
     # Lock down from internet to only be access throw the Application Gateway
     ip_restriction = [{
-      action                    = "Allow"
-      headers                   = []
+      action  = "Allow"
+      headers = []
       # ip_address                = "0.0.0.0/0"
       ip_address                = null
       name                      = "VirtualNetwork"
@@ -41,4 +47,11 @@ resource "azurerm_app_service" "app" {
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE" = "false"
     "DOCKER_REGISTRY_SERVER_URL"          = var.registry_server_url
   }
+}
+
+resource "azurerm_app_service_virtual_network_swift_connection" "app_vnet_integration" {
+  # Only create if subnet_id is provided. Requires "Standard" Tier.
+  count          = var.subnet_id != null ? 1 : 0
+  app_service_id = azurerm_app_service.app.id
+  subnet_id      = var.subnet_id
 }

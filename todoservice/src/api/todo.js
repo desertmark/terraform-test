@@ -13,23 +13,27 @@ const config = {
 };
 
 todoRouter.get("/", async (req, res) => {
-  const client = new CosmosClient({
-    endpoint: config.endpoint,
-    key: config.key,
-  });
-  const tododb = client.database(config.databaseId);
-  const todoContainer = tododb.container(config.containerId);
-
-  // query to return all items
-  const querySpec = {
-    query: "SELECT * from c",
-  };
-
-  // read all items in the Items container
-  const { resources: items } = await todoContainer.items
-    .query(querySpec)
-    .fetchAll();
-  res.send(items);
+  try {
+    const client = new CosmosClient({
+      endpoint: config.endpoint,
+      key: config.key,
+    });
+    const tododb = client.database(config.databaseId);
+    const todoContainer = tododb.container(config.containerId);
+  
+    // query to return all items
+    const querySpec = {
+      query: "SELECT * from c",
+    };
+  
+    // read all items in the Items container
+    const { resources: items } = await todoContainer.items
+      .query(querySpec)
+      .fetchAll();
+    res.send(items);
+  } catch(error) {
+    console.error('Failed to get todo list:', error);
+  }
 });
 
 module.exports = {

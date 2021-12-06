@@ -14,6 +14,19 @@ resource "azurerm_subnet" "agw_subnet" {
   service_endpoints    = ["Microsoft.Web"]
 }
 
+resource "azurerm_subnet" "app_service_subnet" {
+  name                 = "app-service-subnet"
+  resource_group_name  = var.resource_group_name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = ["10.0.3.0/24"]
+  delegation {
+    name = "app-vnet-integration"
+    service_delegation {
+      name = "Microsoft.Web/serverFarms"
+    }
+  }
+}
+
 # SecurityGroup
 resource "azurerm_network_security_group" "vnet_agw_sg" {
   name                = format(var.name_template, "agw-nsg")

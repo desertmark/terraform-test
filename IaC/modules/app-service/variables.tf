@@ -30,3 +30,17 @@ variable "tags" {
 variable "agw_subnet_id" {
   type = string
 }
+
+variable "tier" {
+  type = string
+}
+
+variable "size" {
+  type = string
+}
+
+variable "subnet_id" {
+  type        = string
+  description = "subnet id for vnet integration. Requires 'Standard' Tier."
+  default     = null
+}
