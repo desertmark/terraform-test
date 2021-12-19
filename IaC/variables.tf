@@ -22,3 +22,8 @@ variable "service_image_name" {
 variable "solution" {
   description = "Name that describes the intent of the solution. i.e: todoapp"
 }
+
+variable "gateway" {
+  description = "Layer 7 Gateway to use, azure|nginx"
+  default = "nginx"
+}

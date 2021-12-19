@@ -28,7 +28,13 @@ variable "tags" {
 }
 
 variable "agw_subnet_id" {
-  type = string
+  type    = string
+  default = null
+}
+
+variable "nginx_ips" {
+  type    = list(string)
+  default = null
 }
 
 variable "tier" {
@@ -43,4 +49,24 @@ variable "subnet_id" {
   type        = string
   description = "subnet id for vnet integration. Requires 'Standard' Tier."
   default     = null
+}
+
+variable "include_dns_record" {
+  type    = bool
+  default = false
+}
+
+variable "zone_name" {
+  type        = string
+  description = "DNS Zone name where public IP should be registered in."
+  default     = null
+}
+variable "zone_name_rg" {
+  type        = string
+  description = "DNS Zone resource group name."
+  default     = null
+}
+variable "dns_record_name" {
+  type    = string
+  default = null
 }

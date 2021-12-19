@@ -39,6 +39,30 @@ module "vnet" {
   tags                = local.tags
 }
 
+module "app_gw" {
+  count               = var.gateway == "nginx" ? 1 : 0
+  source              = "./modules/app-service"
+  name_template       = local.name_template
+  location            = var.location
+  resource_group_name = azurerm_resource_group.rg.name
+  app_name            = "${var.solution}gw"
+  image_name          = "desertmark/todogw:latest"
+  registry_server_url = "https://index.docker.io/"
+  tags                = local.tags
+  agw_subnet_id       = null
+  nginx_ips           = null
+  tier                = "Standard"
+  size                = "S1"
+  include_dns_record  = true
+  dns_record_name     = "${var.env}-${var.solution}"
+  zone_name           = var.domain
+  zone_name_rg        = "Default"
+  subnet_id           = module.vnet.app_subnet_id
+  depends_on = [
+    module.vnet
+  ]
+}
+
 module "app_ui" {
   source              = "./modules/app-service"
   name_template       = local.name_template
@@ -48,11 +72,13 @@ module "app_ui" {
   image_name          = var.ui_image_name
   registry_server_url = "https://index.docker.io/"
   tags                = local.tags
-  agw_subnet_id       = module.vnet.agw_subnet_id
+  agw_subnet_id       = var.gateway == "azure" ? module.vnet.agw_subnet_id : null
+  nginx_ips           = var.gateway == "nginx" ? module.app_gw[0].outbound_ips : null
   tier                = "Basic"
   size                = "B1"
   depends_on = [
-    module.vnet
+    module.vnet,
+    module.app_gw
   ]
 }
 
@@ -65,18 +91,19 @@ module "app_service" {
   image_name          = var.service_image_name
   registry_server_url = "https://index.docker.io/"
   tags                = local.tags
-  agw_subnet_id       = module.vnet.agw_subnet_id
+  agw_subnet_id       = var.gateway == "azure" ? module.vnet.agw_subnet_id : null
+  nginx_ips           = var.gateway == "nginx" ? module.app_gw[0].outbound_ips : null
   tier                = "Standard"
   size                = "S1"
   subnet_id           = module.vnet.app_subnet_id
   depends_on = [
-    module.vnet
+    module.vnet,
+    module.app_gw,
   ]
 }
 
-
-
 module "agw" {
+  count               = var.gateway == "azure" ? 1 : 0
   source              = "./modules/app-gateway"
   name_template       = local.name_template
   location            = var.location
