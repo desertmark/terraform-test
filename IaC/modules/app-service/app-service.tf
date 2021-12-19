@@ -18,6 +18,7 @@ locals {
     service_tag               = null
     virtual_network_subnet_id = null
   }] : []
+  vnet_integration = var.subnet_id != null
 }
 
 resource "azurerm_app_service_plan" "plan" {
@@ -66,7 +67,7 @@ resource "azurerm_app_service" "app" {
 
 resource "azurerm_app_service_virtual_network_swift_connection" "app_vnet_integration" {
   # Only create if subnet_id is provided. Requires "Standard" Tier.
-  count          = var.subnet_id != null ? 1 : 0
+  count          = var.vnet_integration ? 1 : 0
   app_service_id = azurerm_app_service.app.id
   subnet_id      = var.subnet_id
 }
@@ -78,5 +79,11 @@ resource "azurerm_dns_cname_record" "app_dns_record" {
   zone_name           = var.zone_name
   resource_group_name = var.zone_name_rg
   ttl                 = 300
-  target_resource_id  = azurerm_app_service.app.id
+  record              = azurerm_app_service.app.default_site_hostname
+}
+resource "azurerm_app_service_custom_hostname_binding" "app_dns_record_binding" {
+  count               = var.include_dns_record ? 1 : 0
+  hostname            = "${var.dns_record_name}.${var.zone_name}"
+  app_service_name    = azurerm_app_service.app.name
+  resource_group_name = var.resource_group_name
 }

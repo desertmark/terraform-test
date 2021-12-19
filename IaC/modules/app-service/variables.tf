@@ -51,6 +51,12 @@ variable "subnet_id" {
   default     = null
 }
 
+variable "vnet_integration" {
+  type        = bool
+  description = "vnet integration enabled. Requires 'Standard' Tier."
+  default     = false
+}
+
 variable "include_dns_record" {
   type    = bool
   default = false

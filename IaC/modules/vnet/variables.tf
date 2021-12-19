@@ -16,3 +16,7 @@ variable "solution" {
 
 variable "tags" {
 }
+
+variable "gateway" {
+  type = string
+}

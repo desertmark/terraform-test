@@ -37,6 +37,7 @@ module "vnet" {
   resource_group_name = azurerm_resource_group.rg.name
   solution            = var.solution
   tags                = local.tags
+  gateway             = var.gateway
 }
 
 module "app_gw" {
@@ -57,7 +58,6 @@ module "app_gw" {
   dns_record_name     = "${var.env}-${var.solution}"
   zone_name           = var.domain
   zone_name_rg        = "Default"
-  subnet_id           = module.vnet.app_subnet_id
   depends_on = [
     module.vnet
   ]
@@ -95,6 +95,7 @@ module "app_service" {
   nginx_ips           = var.gateway == "nginx" ? module.app_gw[0].outbound_ips : null
   tier                = "Standard"
   size                = "S1"
+  vnet_integration    = false
   subnet_id           = module.vnet.app_subnet_id
   depends_on = [
     module.vnet,
