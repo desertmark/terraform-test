@@ -1,0 +1,47 @@
+# Traefik easier to use when deploying to container instances as it doesn't required to build a custom image of it.
+version: "3.9"
+
+services:
+  traefik:
+    image: traefik:latest
+    command:
+      - "--api"
+      - "--api.dashboard"
+      - "--api.insecure" # Don't do that in production
+      - "--providers.docker"
+      - "--entrypoints.web.address=:80"
+
+    ports:
+      - "80:80"
+      - "8081:8080"
+    volumes:
+      - "./traefik:/etc/traefik"
+    networks:
+      - todo
+  todoui:
+    image: desertmark/todoui:latest
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.todoui.rule=Host(`localhost`)"
+      - "traefik.http.routers.todoui.entrypoints=web"
+    ports:
+      - "4200:80"
+    networks:
+      - todo
+
+  todoservice:
+    image: desertmark/todoservice:latest
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.middlewares.remove-api.stripprefix.prefixes=/api"
+      - "traefik.http.routers.todoservice.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.todoservice.middlewares=remove-api@docker"
+      - "traefik.http.routers.todoservice.entrypoints=web"
+    ports:
+      - "5001:5001"
+    networks:
+      - todo
+
+networks:
+  todo:
+    external: true

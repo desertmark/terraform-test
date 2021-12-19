@@ -1,0 +1,15 @@
+{
+  "name": "nginx",
+  "version": "1.0.0",
+  "description": "",
+  "main": "nginx.conf.js",
+  "scripts": {
+    "build:conf": "dotenv -e .env node nginx.conf.js",
+    "build": "docker build -t desertmark/todogw --build-arg BUILD_API_URL=http://app-todoservice-dev-todo-westeurope-001.azurewebsites.net --build-arg BUILD_ROOT_URL=http://app-todoui-dev-todo-westeurope-001.azurewebsites.net --progress=plain ."
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "dotenv-cli": "^4.1.1"
+  }
+}

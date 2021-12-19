@@ -34,5 +34,5 @@ backend.tfvars
 
 
 ## APPS
-todoui/node_modules
-todoservice/node_modules
+**/*/node_modules
+nginx/nginx.conf
